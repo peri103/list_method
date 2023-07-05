@@ -1,0 +1,7 @@
+====0
+private static void log(String msg, String... vals) {
+        System.out.println(String.format(msg, vals));
+    }
+private static void log(String msg, String... vals) {
+        System.out.println(String.format(msg, vals));
+    }

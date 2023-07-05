@@ -1,0 +1,96 @@
+====12
+public String wholeText() {
+        final StringBuilder accum = StringUtil.borrowBuilder();
+        NodeTraversor.traverse(new NodeVisitor() {
+            public void head(Node node, int depth) {
+                if (node instanceof TextNode) {
+                    TextNode textNode = (TextNode) node;
+                    accum.append(textNode.getWholeText());
+                }
+            }
+
+            public void tail(Node node, int depth) {
+            }
+        }, this);
+
+        return StringUtil.releaseBuilder(accum);
+    }
+public String wholeText() {
+        final StringBuilder accum = StringUtil.borrowBuilder();
+        NodeTraversor.traverse((node, depth) -> appendWholeText(node, accum), this);
+        return StringUtil.releaseBuilder(accum);
+    }
+====7
+public void head(Node node, int depth) {
+                if (node instanceof TextNode) {
+                    TextNode textNode = (TextNode) node;
+                    accum.append(textNode.getWholeText());
+                }
+            }
+public void head(Node node, int depth) {
+                if (node instanceof TextNode) {
+                    TextNode textNode = (TextNode) node;
+                    appendNormalisedText(accum, textNode);
+                } else if (node instanceof Element) {
+                    Element element = (Element) node;
+                    if (accum.length() > 0 &&
+                        (element.isBlock() || element.tag.normalName().equals("br")) &&
+                        !TextNode.lastCharIsWhitespace(accum))
+                        accum.append(' ');
+                }
+            }
+====6
+public void tail(Node node, int depth) {
+            }
+public void tail(Node node, int depth) {
+                // make sure there is a space between block tags and immediately following text nodes <div>One</div>Two should be "One Two".
+                if (node instanceof Element) {
+                    Element element = (Element) node;
+                    if (element.isBlock() && (node.nextSibling() instanceof TextNode) && !TextNode.lastCharIsWhitespace(accum))
+                        accum.append(' ');
+                }
+
+            }
+====2
+private void ownText(StringBuilder accum) {
+        for (Node child : childNodes) {
+            if (child instanceof TextNode) {
+                TextNode textNode = (TextNode) child;
+                appendNormalisedText(accum, textNode);
+            } else if (child instanceof Element) {
+                appendWhitespaceIfBr((Element) child, accum);
+            }
+        }
+    }
+private void ownText(StringBuilder accum) {
+        for (int i = 0; i < childNodeSize(); i++) {
+            Node child = childNodes.get(i);
+            if (child instanceof TextNode) {
+                TextNode textNode = (TextNode) child;
+                appendNormalisedText(accum, textNode);
+            } else if (child instanceof Element) {
+                appendWhitespaceIfBr((Element) child, accum);
+            }
+        }
+    }
+====1
+private boolean isInlineable(Document.OutputSettings out) {
+        return tag().isInline()
+            && !tag().isEmpty()
+            && (parent() == null || parent().isBlock())
+            && previousSibling() != null
+            && !out.outline();
+    }
+private boolean isInlineable(Document.OutputSettings out) {
+        return tag().isInline()
+            && (parent() == null || parent().isBlock())
+            && previousSibling() != null
+            && !out.outline();
+    }
+====0
+private boolean isFormatAsBlock(Document.OutputSettings out) {
+        return tag.formatAsBlock() || (parent() != null && parent().tag().formatAsBlock()) || out.outline();
+    }
+private boolean isFormatAsBlock(Document.OutputSettings out) {
+        return tag.formatAsBlock() || (parent() != null && parent().tag().formatAsBlock()) || out.outline();
+    }

@@ -1,0 +1,76 @@
+====1
+private static void readEndTag(Tokeniser t, CharacterReader r, TokeniserState a, TokeniserState b) {
+        if (r.matchesLetter()) {
+            t.createTagPending(false);
+            t.transition(a);
+        } else {
+            t.emit("</");
+            t.transition(b);
+        }
+    }
+private static void readEndTag(Tokeniser t, CharacterReader r, TokeniserState a, TokeniserState b) {
+        if (r.matchesAsciiAlpha()) {
+            t.createTagPending(false);
+            t.transition(a);
+        } else {
+            t.emit("</");
+            t.transition(b);
+        }
+    }
+====0
+private static void handleDataDoubleEscapeTag(Tokeniser t, CharacterReader r, TokeniserState primary, TokeniserState fallback) {
+        if (r.matchesLetter()) {
+            String name = r.consumeLetterSequence();
+            t.dataBuffer.append(name);
+            t.emit(name);
+            return;
+        }
+
+        char c = r.consume();
+        switch (c) {
+            case '\t':
+            case '\n':
+            case '\r':
+            case '\f':
+            case ' ':
+            case '/':
+            case '>':
+                if (t.dataBuffer.toString().equals("script"))
+                    t.transition(primary);
+                else
+                    t.transition(fallback);
+                t.emit(c);
+                break;
+            default:
+                r.unconsume();
+                t.transition(fallback);
+        }
+    }
+private static void handleDataDoubleEscapeTag(Tokeniser t, CharacterReader r, TokeniserState primary, TokeniserState fallback) {
+        if (r.matchesLetter()) {
+            String name = r.consumeLetterSequence();
+            t.dataBuffer.append(name);
+            t.emit(name);
+            return;
+        }
+
+        char c = r.consume();
+        switch (c) {
+            case '\t':
+            case '\n':
+            case '\r':
+            case '\f':
+            case ' ':
+            case '/':
+            case '>':
+                if (t.dataBuffer.toString().equals("script"))
+                    t.transition(primary);
+                else
+                    t.transition(fallback);
+                t.emit(c);
+                break;
+            default:
+                r.unconsume();
+                t.transition(fallback);
+        }
+    }

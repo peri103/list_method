@@ -1,0 +1,9 @@
+====0
+static Parser parser(Node node) {
+        Document doc = node.ownerDocument();
+        return doc != null && doc.parser() != null ? doc.parser() : new Parser(new HtmlTreeBuilder());
+    }
+static Parser parser(Node node) {
+        Document doc = node.ownerDocument();
+        return doc != null && doc.parser() != null ? doc.parser() : new Parser(new HtmlTreeBuilder());
+    }

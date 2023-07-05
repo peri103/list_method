@@ -1,0 +1,261 @@
+====8
+private void findElements() {
+        if (tq.matchChomp("#"))
+            byId();
+        else if (tq.matchChomp("."))
+            byClass();
+        else if (tq.matchesWord() || tq.matches("*|"))
+            byTag();
+        else if (tq.matches("["))
+            byAttribute();
+        else if (tq.matchChomp("*"))
+            allElements();
+        else if (tq.matchChomp(":lt("))
+            indexLessThan();
+        else if (tq.matchChomp(":gt("))
+            indexGreaterThan();
+        else if (tq.matchChomp(":eq("))
+            indexEquals();
+        else if (tq.matches(":has("))
+            has();
+        else if (tq.matches(":contains("))
+            contains(false);
+        else if (tq.matches(":containsOwn("))
+            contains(true);
+        else if (tq.matches(":containsData("))
+            containsData();
+        else if (tq.matches(":matches("))
+            matches(false);
+        else if (tq.matches(":matchesOwn("))
+            matches(true);
+        else if (tq.matches(":not("))
+            not();
+		else if (tq.matchChomp(":nth-child("))
+        	cssNthChild(false, false);
+        else if (tq.matchChomp(":nth-last-child("))
+        	cssNthChild(true, false);
+        else if (tq.matchChomp(":nth-of-type("))
+        	cssNthChild(false, true);
+        else if (tq.matchChomp(":nth-last-of-type("))
+        	cssNthChild(true, true);
+        else if (tq.matchChomp(":first-child"))
+        	evals.add(new Evaluator.IsFirstChild());
+        else if (tq.matchChomp(":last-child"))
+        	evals.add(new Evaluator.IsLastChild());
+        else if (tq.matchChomp(":first-of-type"))
+        	evals.add(new Evaluator.IsFirstOfType());
+        else if (tq.matchChomp(":last-of-type"))
+        	evals.add(new Evaluator.IsLastOfType());
+        else if (tq.matchChomp(":only-child"))
+        	evals.add(new Evaluator.IsOnlyChild());
+        else if (tq.matchChomp(":only-of-type"))
+        	evals.add(new Evaluator.IsOnlyOfType());
+        else if (tq.matchChomp(":empty"))
+        	evals.add(new Evaluator.IsEmpty());
+        else if (tq.matchChomp(":root"))
+        	evals.add(new Evaluator.IsRoot());
+        else if (tq.matchChomp(":matchText"))
+            evals.add(new Evaluator.MatchText());
+		else // unhandled
+            throw new Selector.SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query, tq.remainder());
+
+    }
+private void findElements() {
+        if (tq.matchChomp("#"))
+            byId();
+        else if (tq.matchChomp("."))
+            byClass();
+        else if (tq.matchesWord() || tq.matches("*|"))
+            byTag();
+        else if (tq.matches("["))
+            byAttribute();
+        else if (tq.matchChomp("*"))
+            allElements();
+        else if (tq.matchChomp(":lt("))
+            indexLessThan();
+        else if (tq.matchChomp(":gt("))
+            indexGreaterThan();
+        else if (tq.matchChomp(":eq("))
+            indexEquals();
+        else if (tq.matches(":has("))
+            has();
+        else if (tq.matches(":contains("))
+            contains(false);
+        else if (tq.matches(":containsOwn("))
+            contains(true);
+        else if (tq.matches(":containsWholeText("))
+            containsWholeText(false);
+        else if (tq.matches(":containsWholeOwnText("))
+            containsWholeText(true);
+        else if (tq.matches(":containsData("))
+            containsData();
+        else if (tq.matches(":matches("))
+            matches(false);
+        else if (tq.matches(":matchesOwn("))
+            matches(true);
+        else if (tq.matches(":matchesWholeText("))
+            matchesWholeText(false);
+        else if (tq.matches(":matchesWholeOwnText("))
+            matchesWholeText(true);
+        else if (tq.matches(":not("))
+            not();
+		else if (tq.matchChomp(":nth-child("))
+        	cssNthChild(false, false);
+        else if (tq.matchChomp(":nth-last-child("))
+        	cssNthChild(true, false);
+        else if (tq.matchChomp(":nth-of-type("))
+        	cssNthChild(false, true);
+        else if (tq.matchChomp(":nth-last-of-type("))
+        	cssNthChild(true, true);
+        else if (tq.matchChomp(":first-child"))
+        	evals.add(new Evaluator.IsFirstChild());
+        else if (tq.matchChomp(":last-child"))
+        	evals.add(new Evaluator.IsLastChild());
+        else if (tq.matchChomp(":first-of-type"))
+        	evals.add(new Evaluator.IsFirstOfType());
+        else if (tq.matchChomp(":last-of-type"))
+        	evals.add(new Evaluator.IsLastOfType());
+        else if (tq.matchChomp(":only-child"))
+        	evals.add(new Evaluator.IsOnlyChild());
+        else if (tq.matchChomp(":only-of-type"))
+        	evals.add(new Evaluator.IsOnlyOfType());
+        else if (tq.matchChomp(":empty"))
+        	evals.add(new Evaluator.IsEmpty());
+        else if (tq.matchChomp(":root"))
+        	evals.add(new Evaluator.IsRoot());
+        else if (tq.matchChomp(":matchText"))
+            evals.add(new Evaluator.MatchText());
+		else // unhandled
+            throw new Selector.SelectorParseException("Could not parse query '%s': unexpected token at '%s'", query, tq.remainder());
+
+    }
+====6
+private void matches(boolean own) {
+        tq.consume(own ? ":matchesOwn" : ":matches");
+        String regex = tq.chompBalanced('(', ')'); // don't unescape, as regex bits will be escaped
+        Validate.notEmpty(regex, ":matches(regex) query must not be empty");
+
+        if (own)
+            evals.add(new Evaluator.MatchesOwn(Pattern.compile(regex)));
+        else
+            evals.add(new Evaluator.Matches(Pattern.compile(regex)));
+    }
+private void matches(boolean own) {
+        String query = own ? ":matchesOwn" : ":matches";
+        tq.consume(query);
+        String regex = tq.chompBalanced('(', ')'); // don't unescape, as regex bits will be escaped
+        Validate.notEmpty(regex, query + "(regex) query must not be empty");
+
+        evals.add(own
+            ? new Evaluator.MatchesOwn(Pattern.compile(regex))
+            : new Evaluator.Matches(Pattern.compile(regex)));
+    }
+====4
+private String consumeSubQuery() {
+        StringBuilder sq = StringUtil.borrowBuilder();
+        while (!tq.isEmpty()) {
+            if (tq.matches("("))
+                sq.append("(").append(tq.chompBalanced('(', ')')).append(")");
+            else if (tq.matches("["))
+                sq.append("[").append(tq.chompBalanced('[', ']')).append("]");
+            else if (tq.matchesAny(combinators))
+                break;
+            else
+                sq.append(tq.consume());
+        }
+        return StringUtil.releaseBuilder(sq);
+    }
+private String consumeSubQuery() {
+        StringBuilder sq = StringUtil.borrowBuilder();
+        while (!tq.isEmpty()) {
+            if (tq.matches("("))
+                sq.append("(").append(tq.chompBalanced('(', ')')).append(")");
+            else if (tq.matches("["))
+                sq.append("[").append(tq.chompBalanced('[', ']')).append("]");
+            else if (tq.matchesAny(combinators))
+                if (sq.length() > 0)
+                    break;
+                else
+                    tq.consume();
+            else
+                sq.append(tq.consume());
+        }
+        return StringUtil.releaseBuilder(sq);
+    }
+====3
+private void byTag() {
+        // todo - these aren't dealing perfectly with case sensitivity. For case sensitive parsers, we should also make
+        // the tag in the selector case-sensitive (and also attribute names). But for now, normalize (lower-case) for
+        // consistency - both the selector and the element tag
+        String tagName = normalize(tq.consumeElementSelector());
+        Validate.notEmpty(tagName);
+
+        // namespaces: wildcard match equals(tagName) or ending in ":"+tagName
+        if (tagName.startsWith("*|")) {
+            evals.add(new CombiningEvaluator.Or(new Evaluator.Tag(tagName), new Evaluator.TagEndsWith(tagName.replace("*|", ":"))));
+        } else {
+            // namespaces: if element name is "abc:def", selector must be "abc|def", so flip:
+            if (tagName.contains("|"))
+                tagName = tagName.replace("|", ":");
+
+            evals.add(new Evaluator.Tag(tagName));
+        }
+    }
+private void byTag() {
+        // todo - these aren't dealing perfectly with case sensitivity. For case sensitive parsers, we should also make
+        // the tag in the selector case-sensitive (and also attribute names). But for now, normalize (lower-case) for
+        // consistency - both the selector and the element tag
+        String tagName = normalize(tq.consumeElementSelector());
+        Validate.notEmpty(tagName);
+
+        // namespaces: wildcard match equals(tagName) or ending in ":"+tagName
+        if (tagName.startsWith("*|")) {
+            String plainTag = tagName.substring(2); // strip *|
+            evals.add(new CombiningEvaluator.Or(
+                new Evaluator.Tag(plainTag),
+                new Evaluator.TagEndsWith(tagName.replace("*|", ":")))
+            );
+        } else {
+            // namespaces: if element name is "abc:def", selector must be "abc|def", so flip:
+            if (tagName.contains("|"))
+                tagName = tagName.replace("|", ":");
+
+            evals.add(new Evaluator.Tag(tagName));
+        }
+    }
+====2
+@Override
+    public String toString() {
+        return query;
+    }
+public String toString() {
+        return query;
+    }
+====1
+private void has() {
+        tq.consume(":has");
+        String subQuery = tq.chompBalanced('(', ')');
+        Validate.notEmpty(subQuery, ":has(el) subselect must not be empty");
+        evals.add(new StructuralEvaluator.Has(parse(subQuery)));
+    }
+private void has() {
+        tq.consume(":has");
+        String subQuery = tq.chompBalanced('(', ')');
+        Validate.notEmpty(subQuery, ":has(selector) sub-select must not be empty");
+        evals.add(new StructuralEvaluator.Has(parse(subQuery)));
+    }
+====0
+private void not() {
+        tq.consume(":not");
+        String subQuery = tq.chompBalanced('(', ')');
+        Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
+
+        evals.add(new StructuralEvaluator.Not(parse(subQuery)));
+    }
+private void not() {
+        tq.consume(":not");
+        String subQuery = tq.chompBalanced('(', ')');
+        Validate.notEmpty(subQuery, ":not(selector) subselect must not be empty");
+
+        evals.add(new StructuralEvaluator.Not(parse(subQuery)));
+    }

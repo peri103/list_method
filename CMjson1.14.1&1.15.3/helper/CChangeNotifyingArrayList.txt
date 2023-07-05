@@ -1,0 +1,10 @@
+====0
+@Override
+    public boolean retainAll(Collection<?> c) {
+        onContentsChanged();
+        return super.retainAll(c);
+    }
+public boolean retainAll(Collection<?> c) {
+        onContentsChanged();
+        return super.retainAll(c);
+    }

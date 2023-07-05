@@ -1,0 +1,7 @@
+====0
+public static Parser xmlParser() {
+        return new Parser(new XmlTreeBuilder());
+    }
+public static Parser xmlParser() {
+        return new Parser(new XmlTreeBuilder());
+    }

@@ -1,0 +1,31 @@
+====2
+@Override
+    public String toString() {
+        return outerHtml();
+    }
+public String toString() {
+        return outerHtml();
+    }
+====0
+private <T extends Node> List<T> childNodesOfType(Class<T> tClass) {
+        ArrayList<T> nodes = new ArrayList<>();
+        for (Element el: this) {
+            for (int i = 0; i < el.childNodeSize(); i++) {
+                Node node = el.childNode(i);
+                if (tClass.isInstance(node))
+                    nodes.add(tClass.cast(node));
+            }
+        }
+        return nodes;
+    }
+private <T extends Node> List<T> childNodesOfType(Class<T> tClass) {
+        ArrayList<T> nodes = new ArrayList<>();
+        for (Element el: this) {
+            for (int i = 0; i < el.childNodeSize(); i++) {
+                Node node = el.childNode(i);
+                if (tClass.isInstance(node))
+                    nodes.add(tClass.cast(node));
+            }
+        }
+        return nodes;
+    }

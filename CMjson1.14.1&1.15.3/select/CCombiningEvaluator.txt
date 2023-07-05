@@ -1,0 +1,17 @@
+====2
+@Override
+        public String toString() {
+            return StringUtil.join(evaluators, ", ");
+        }
+public String toString() {
+            return StringUtil.join(evaluators, ", ");
+        }
+====0
+public void add(Evaluator e) {
+            evaluators.add(e);
+            updateNumEvaluators();
+        }
+public void add(Evaluator e) {
+            evaluators.add(e);
+            updateNumEvaluators();
+        }

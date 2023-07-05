@@ -1,0 +1,26 @@
+====1
+Attributes normalizeAttributes(Attributes attributes) {
+        if (attributes != null && !preserveAttributeCase) {
+            attributes.normalize();
+        }
+        return attributes;
+    }
+@Nullable Attributes normalizeAttributes(@Nullable Attributes attributes) {
+        if (attributes != null && !preserveAttributeCase) {
+            attributes.normalize();
+        }
+        return attributes;
+    }
+====0
+public String normalizeAttribute(String name) {
+        name = name.trim();
+        if (!preserveAttributeCase)
+            name = lowerCase(name);
+        return name;
+    }
+public String normalizeAttribute(String name) {
+        name = name.trim();
+        if (!preserveAttributeCase)
+            name = lowerCase(name);
+        return name;
+    }

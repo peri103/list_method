@@ -1,0 +1,43 @@
+====3
+protected void html(Appendable accum, Document.OutputSettings out) throws IOException {
+        html(key, val, accum, out);
+    }
+protected static void html(String key, @Nullable String val, Appendable accum, Document.OutputSettings out) throws IOException {
+        key = getValidKey(key, out.syntax());
+        if (key == null) return; // can't write it :(
+        htmlNoValidate(key, val, accum, out);
+    }
+====2
+protected static boolean isBooleanAttribute(final String key) {
+        return Arrays.binarySearch(booleanAttributes, key) >= 0;
+    }
+public static boolean isBooleanAttribute(final String key) {
+        return Arrays.binarySearch(booleanAttributes, Normalizer.lowerCase(key)) >= 0;
+    }
+====1
+protected static boolean shouldCollapseAttribute(final String key, @Nullable final String val, final Document.OutputSettings out) {
+        return (
+            out.syntax() == Document.OutputSettings.Syntax.html &&
+                (val == null || (val.isEmpty() || val.equalsIgnoreCase(key)) && Attribute.isBooleanAttribute(key)));
+    }
+protected static boolean shouldCollapseAttribute(final String key, @Nullable final String val, final Document.OutputSettings out) {
+        return (
+            out.syntax() == Syntax.html &&
+                (val == null || (val.isEmpty() || val.equalsIgnoreCase(key)) && Attribute.isBooleanAttribute(key)));
+    }
+====0
+@Override
+    public Attribute clone() {
+        try {
+            return (Attribute) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
+    }
+public Attribute clone() {
+        try {
+            return (Attribute) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
+    }

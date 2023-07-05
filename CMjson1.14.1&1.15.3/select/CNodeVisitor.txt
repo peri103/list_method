@@ -1,0 +1,8 @@
+====2
+void tail(Node node, int depth);
+default void tail(Node node, int depth) {
+        // no-op by default, to allow just specifying the head() method
+    }
+====0
+void head(Node node, int depth);
+void head(Node node, int depth);

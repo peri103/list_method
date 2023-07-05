@@ -1,0 +1,333 @@
+====6
+static Response execute(HttpConnection.Request req, @Nullable Response previousResponse) throws IOException {
+            synchronized (req) {
+                Validate.isFalse(req.executing, "Multiple threads were detected trying to execute the same request concurrently. Make sure to use Connection#newRequest() and do not share an executing request between threads.");
+                req.executing = true;
+            }
+            Validate.notNull(req, "Request must not be null");
+            URL url = req.url();
+            Validate.notNull(url, "URL must be specified to connect");
+            String protocol = url.getProtocol();
+            if (!protocol.equals("http") && !protocol.equals("https"))
+                throw new MalformedURLException("Only http & https protocols supported");
+            final boolean methodHasBody = req.method().hasBody();
+            final boolean hasRequestBody = req.requestBody() != null;
+            if (!methodHasBody)
+                Validate.isFalse(hasRequestBody, "Cannot set a request body for HTTP method " + req.method());
+
+            // set up the request for execution
+            String mimeBoundary = null;
+            if (req.data().size() > 0 && (!methodHasBody || hasRequestBody))
+                serialiseRequestUrl(req);
+            else if (methodHasBody)
+                mimeBoundary = setOutputContentType(req);
+
+            long startTime = System.nanoTime();
+            HttpURLConnection conn = createConnection(req);
+            Response res = null;
+            try {
+                conn.connect();
+                if (conn.getDoOutput())
+                    writePost(req, conn.getOutputStream(), mimeBoundary);
+
+                int status = conn.getResponseCode();
+                res = new Response(conn, req, previousResponse);
+
+                // redirect if there's a location header (from 3xx, or 201 etc)
+                if (res.hasHeader(LOCATION) && req.followRedirects()) {
+                    if (status != HTTP_TEMP_REDIR) {
+                        req.method(Method.GET); // always redirect with a get. any data param from original req are dropped.
+                        req.data().clear();
+                        req.requestBody(null);
+                        req.removeHeader(CONTENT_TYPE);
+                    }
+
+                    String location = res.header(LOCATION);
+                    Validate.notNull(location);
+                    if (location.startsWith("http:/") && location.charAt(6) != '/') // fix broken Location: http:/temp/AAG_New/en/index.php
+                        location = location.substring(6);
+                    URL redir = StringUtil.resolve(req.url(), location);
+                    req.url(encodeUrl(redir));
+
+                    req.executing = false;
+                    return execute(req, res);
+                }
+                if ((status < 200 || status >= 400) && !req.ignoreHttpErrors())
+                        throw new HttpStatusException("HTTP error fetching URL", status, req.url().toString());
+
+                // check that we can handle the returned content type; if not, abort before fetching it
+                String contentType = res.contentType();
+                if (contentType != null
+                        && !req.ignoreContentType()
+                        && !contentType.startsWith("text/")
+                        && !xmlContentTypeRxp.matcher(contentType).matches()
+                        )
+                    throw new UnsupportedMimeTypeException("Unhandled content type. Must be text/*, application/xml, or application/*+xml",
+                            contentType, req.url().toString());
+
+                // switch to the XML parser if content type is xml and not parser not explicitly set
+                if (contentType != null && xmlContentTypeRxp.matcher(contentType).matches()) {
+                    if (!req.parserDefined) req.parser(Parser.xmlParser());
+                }
+
+                res.charset = DataUtil.getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
+                if (conn.getContentLength() != 0 && req.method() != HEAD) { // -1 means unknown, chunked. sun throws an IO exception on 500 response with no content when trying to read body
+                    res.bodyStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
+                    Validate.notNull(res.bodyStream);
+                    if (res.hasHeaderWithValue(CONTENT_ENCODING, "gzip")) {
+                        res.bodyStream = new GZIPInputStream(res.bodyStream);
+                    } else if (res.hasHeaderWithValue(CONTENT_ENCODING, "deflate")) {
+                        res.bodyStream = new InflaterInputStream(res.bodyStream, new Inflater(true));
+                    }
+                    res.bodyStream = ConstrainableInputStream
+                        .wrap(res.bodyStream, DataUtil.bufferSize, req.maxBodySize())
+                        .timeout(startTime, req.timeout())
+                    ;
+                } else {
+                    res.byteData = DataUtil.emptyByteBuffer();
+                }
+            } catch (IOException e) {
+                if (res != null) res.safeClose(); // will be non-null if got to conn
+                throw e;
+            } finally {
+                req.executing = false;
+            }
+
+            res.executed = true;
+            return res;
+        }
+static Response execute(HttpConnection.Request req, @Nullable Response previousResponse) throws IOException {
+            synchronized (req) {
+                Validate.isFalse(req.executing, "Multiple threads were detected trying to execute the same request concurrently. Make sure to use Connection#newRequest() and do not share an executing request between threads.");
+                req.executing = true;
+            }
+            Validate.notNullParam(req, "req");
+            URL url = req.url();
+            Validate.notNull(url, "URL must be specified to connect");
+            String protocol = url.getProtocol();
+            if (!protocol.equals("http") && !protocol.equals("https"))
+                throw new MalformedURLException("Only http & https protocols supported");
+            final boolean methodHasBody = req.method().hasBody();
+            final boolean hasRequestBody = req.requestBody() != null;
+            if (!methodHasBody)
+                Validate.isFalse(hasRequestBody, "Cannot set a request body for HTTP method " + req.method());
+
+            // set up the request for execution
+            String mimeBoundary = null;
+            if (req.data().size() > 0 && (!methodHasBody || hasRequestBody))
+                serialiseRequestUrl(req);
+            else if (methodHasBody)
+                mimeBoundary = setOutputContentType(req);
+
+            long startTime = System.nanoTime();
+            HttpURLConnection conn = createConnection(req);
+            Response res = null;
+            try {
+                conn.connect();
+                if (conn.getDoOutput()) {
+                    OutputStream out = conn.getOutputStream();
+                    try { writePost(req, out, mimeBoundary); }
+                    catch (IOException e) { conn.disconnect(); throw e; }
+                    finally { out.close(); }
+                }
+
+                int status = conn.getResponseCode();
+                res = new Response(conn, req, previousResponse);
+
+                // redirect if there's a location header (from 3xx, or 201 etc)
+                if (res.hasHeader(LOCATION) && req.followRedirects()) {
+                    if (status != HTTP_TEMP_REDIR) {
+                        req.method(Method.GET); // always redirect with a get. any data param from original req are dropped.
+                        req.data().clear();
+                        req.requestBody(null);
+                        req.removeHeader(CONTENT_TYPE);
+                    }
+
+                    String location = res.header(LOCATION);
+                    Validate.notNull(location);
+                    if (location.startsWith("http:/") && location.charAt(6) != '/') // fix broken Location: http:/temp/AAG_New/en/index.php
+                        location = location.substring(6);
+                    URL redir = StringUtil.resolve(req.url(), location);
+                    req.url(encodeUrl(redir));
+
+                    req.executing = false;
+                    return execute(req, res);
+                }
+                if ((status < 200 || status >= 400) && !req.ignoreHttpErrors())
+                        throw new HttpStatusException("HTTP error fetching URL", status, req.url().toString());
+
+                // check that we can handle the returned content type; if not, abort before fetching it
+                String contentType = res.contentType();
+                if (contentType != null
+                        && !req.ignoreContentType()
+                        && !contentType.startsWith("text/")
+                        && !xmlContentTypeRxp.matcher(contentType).matches()
+                        )
+                    throw new UnsupportedMimeTypeException("Unhandled content type. Must be text/*, application/xml, or application/*+xml",
+                            contentType, req.url().toString());
+
+                // switch to the XML parser if content type is xml and not parser not explicitly set
+                if (contentType != null && xmlContentTypeRxp.matcher(contentType).matches()) {
+                    if (!req.parserDefined) req.parser(Parser.xmlParser());
+                }
+
+                res.charset = DataUtil.getCharsetFromContentType(res.contentType); // may be null, readInputStream deals with it
+                if (conn.getContentLength() != 0 && req.method() != HEAD) { // -1 means unknown, chunked. sun throws an IO exception on 500 response with no content when trying to read body
+                    res.bodyStream = conn.getErrorStream() != null ? conn.getErrorStream() : conn.getInputStream();
+                    Validate.notNull(res.bodyStream);
+                    if (res.hasHeaderWithValue(CONTENT_ENCODING, "gzip")) {
+                        res.bodyStream = new GZIPInputStream(res.bodyStream);
+                    } else if (res.hasHeaderWithValue(CONTENT_ENCODING, "deflate")) {
+                        res.bodyStream = new InflaterInputStream(res.bodyStream, new Inflater(true));
+                    }
+                    res.bodyStream = ConstrainableInputStream
+                        .wrap(res.bodyStream, DataUtil.bufferSize, req.maxBodySize())
+                        .timeout(startTime, req.timeout())
+                    ;
+                } else {
+                    res.byteData = DataUtil.emptyByteBuffer();
+                }
+            } catch (IOException e) {
+                if (res != null) res.safeClose(); // will be non-null if got to conn
+                throw e;
+            } finally {
+                req.executing = false;
+            }
+
+            res.executed = true;
+            return res;
+        }
+====2
+public T cookie(String name, String value) {
+            Validate.notEmpty(name, "Cookie name must not be empty");
+            Validate.notNull(value, "Cookie value must not be null");
+            cookies.put(name, value);
+            return (T) this;
+        }
+public T cookie(String name, String value) {
+            Validate.notEmptyParam(name, "name");
+            Validate.notNullParam(value, "value");
+            cookies.put(name, value);
+            return (T) this;
+        }
+====1
+private static void writePost(final Connection.Request req, final OutputStream outputStream, @Nullable final String boundary) throws IOException {
+            final Collection<Connection.KeyVal> data = req.data();
+            final BufferedWriter w = new BufferedWriter(new OutputStreamWriter(outputStream, req.postDataCharset()));
+
+            if (boundary != null) {
+                // boundary will be set if we're in multipart mode
+                for (Connection.KeyVal keyVal : data) {
+                    w.write("--");
+                    w.write(boundary);
+                    w.write("\r\n");
+                    w.write("Content-Disposition: form-data; name=\"");
+                    w.write(encodeMimeName(keyVal.key())); // encodes " to %22
+                    w.write("\"");
+                    final InputStream input = keyVal.inputStream();
+                    if (input != null) {
+                        w.write("; filename=\"");
+                        w.write(encodeMimeName(keyVal.value()));
+                        w.write("\"\r\nContent-Type: ");
+                        String contentType = keyVal.contentType();
+                        w.write(contentType != null ? contentType : DefaultUploadType);
+                        w.write("\r\n\r\n");
+                        w.flush(); // flush
+                        DataUtil.crossStreams(input, outputStream);
+                        outputStream.flush();
+                    } else {
+                        w.write("\r\n\r\n");
+                        w.write(keyVal.value());
+                    }
+                    w.write("\r\n");
+                }
+                w.write("--");
+                w.write(boundary);
+                w.write("--");
+            } else {
+                String body = req.requestBody();
+                if (body != null) {
+                    // data will be in query string, we're sending a plaintext body
+                    w.write(body);
+                }
+                else {
+                    // regular form data (application/x-www-form-urlencoded)
+                    boolean first = true;
+                    for (Connection.KeyVal keyVal : data) {
+                        if (!first)
+                            w.append('&');
+                        else
+                            first = false;
+
+                        w.write(URLEncoder.encode(keyVal.key(), req.postDataCharset()));
+                        w.write('=');
+                        w.write(URLEncoder.encode(keyVal.value(), req.postDataCharset()));
+                    }
+                }
+            }
+            w.close();
+        }
+private static void writePost(final Connection.Request req, final OutputStream outputStream, @Nullable final String boundary) throws IOException {
+            final Collection<Connection.KeyVal> data = req.data();
+            final BufferedWriter w = new BufferedWriter(new OutputStreamWriter(outputStream, Charset.forName(req.postDataCharset())));
+
+            if (boundary != null) {
+                // boundary will be set if we're in multipart mode
+                for (Connection.KeyVal keyVal : data) {
+                    w.write("--");
+                    w.write(boundary);
+                    w.write("\r\n");
+                    w.write("Content-Disposition: form-data; name=\"");
+                    w.write(encodeMimeName(keyVal.key())); // encodes " to %22
+                    w.write("\"");
+                    final InputStream input = keyVal.inputStream();
+                    if (input != null) {
+                        w.write("; filename=\"");
+                        w.write(encodeMimeName(keyVal.value()));
+                        w.write("\"\r\nContent-Type: ");
+                        String contentType = keyVal.contentType();
+                        w.write(contentType != null ? contentType : DefaultUploadType);
+                        w.write("\r\n\r\n");
+                        w.flush(); // flush
+                        DataUtil.crossStreams(input, outputStream);
+                        outputStream.flush();
+                    } else {
+                        w.write("\r\n\r\n");
+                        w.write(keyVal.value());
+                    }
+                    w.write("\r\n");
+                }
+                w.write("--");
+                w.write(boundary);
+                w.write("--");
+            } else {
+                String body = req.requestBody();
+                if (body != null) {
+                    // data will be in query string, we're sending a plaintext body
+                    w.write(body);
+                }
+                else {
+                    // regular form data (application/x-www-form-urlencoded)
+                    boolean first = true;
+                    for (Connection.KeyVal keyVal : data) {
+                        if (!first)
+                            w.append('&');
+                        else
+                            first = false;
+
+                        w.write(URLEncoder.encode(keyVal.key(), req.postDataCharset()));
+                        w.write('=');
+                        w.write(URLEncoder.encode(keyVal.value(), req.postDataCharset()));
+                    }
+                }
+            }
+            w.close();
+        }
+====0
+@Override
+        public String toString() {
+            return key + "=" + value;
+        }
+public String toString() {
+            return key + "=" + value;
+        }

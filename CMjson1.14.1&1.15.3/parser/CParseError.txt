@@ -1,0 +1,15 @@
+====1
+@Override
+    public String toString() {
+        return pos + ": " + errorMsg;
+    }
+public String toString() {
+        return "<" + cursorPos + ">: " + errorMsg;
+    }
+====0
+public int getPosition() {
+        return pos;
+    }
+public int getPosition() {
+        return pos;
+    }

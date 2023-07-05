@@ -1,0 +1,265 @@
+====25
+private static void load(EscapeMode e, String pointsData, int size) {
+        e.nameKeys = new String[size];
+        e.codeVals = new int[size];
+        e.codeKeys = new int[size];
+        e.nameVals = new String[size];
+
+        int i = 0;
+        CharacterReader reader = new CharacterReader(pointsData);
+
+        while (!reader.isEmpty()) {
+            // NotNestedLessLess=10913,824;1887&
+
+            final String name = reader.consumeTo('=');
+            reader.advance();
+            final int cp1 = Integer.parseInt(reader.consumeToAny(codeDelims), codepointRadix);
+            final char codeDelim = reader.current();
+            reader.advance();
+            final int cp2;
+            if (codeDelim == ',') {
+                cp2 = Integer.parseInt(reader.consumeTo(';'), codepointRadix);
+                reader.advance();
+            } else {
+                cp2 = empty;
+            }
+            final String indexS = reader.consumeTo('&');
+            final int index = Integer.parseInt(indexS, codepointRadix);
+            reader.advance();
+
+            e.nameKeys[i] = name;
+            e.codeVals[i] = cp1;
+            e.codeKeys[index] = cp1;
+            e.nameVals[index] = name;
+
+            if (cp2 != empty) {
+                multipoints.put(name, new String(new int[]{cp1, cp2}, 0, 2));
+            }
+            i++;
+        }
+
+        Validate.isTrue(i == size, "Unexpected count of entities loaded");
+    }
+private static void load(EscapeMode e, String pointsData, int size) {
+        e.nameKeys = new String[size];
+        e.codeVals = new int[size];
+        e.codeKeys = new int[size];
+        e.nameVals = new String[size];
+
+        int i = 0;
+        CharacterReader reader = new CharacterReader(pointsData);
+        try {
+            while (!reader.isEmpty()) {
+                // NotNestedLessLess=10913,824;1887&
+
+                final String name = reader.consumeTo('=');
+                reader.advance();
+                final int cp1 = Integer.parseInt(reader.consumeToAny(codeDelims), codepointRadix);
+                final char codeDelim = reader.current();
+                reader.advance();
+                final int cp2;
+                if (codeDelim == ',') {
+                    cp2 = Integer.parseInt(reader.consumeTo(';'), codepointRadix);
+                    reader.advance();
+                } else {
+                    cp2 = empty;
+                }
+                final String indexS = reader.consumeTo('&');
+                final int index = Integer.parseInt(indexS, codepointRadix);
+                reader.advance();
+
+                e.nameKeys[i] = name;
+                e.codeVals[i] = cp1;
+                e.codeKeys[index] = cp1;
+                e.nameVals[index] = name;
+
+                if (cp2 != empty) {
+                    multipoints.put(name, new String(new int[]{cp1, cp2}, 0, 2));
+                }
+                i++;
+            }
+
+            Validate.isTrue(i == size, "Unexpected count of entities loaded");
+        } finally {
+            reader.close();
+        }
+    }
+====15
+static void escape(Appendable accum, String string, OutputSettings out,
+                       boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite) throws IOException {
+
+        boolean lastWasWhite = false;
+        boolean reachedNonWhite = false;
+        final EscapeMode escapeMode = out.escapeMode();
+        final CharsetEncoder encoder = out.encoder();
+        final CoreCharset coreCharset = out.coreCharset; // init in out.prepareEncoder()
+        final int length = string.length();
+
+        int codePoint;
+        for (int offset = 0; offset < length; offset += Character.charCount(codePoint)) {
+            codePoint = string.codePointAt(offset);
+
+            if (normaliseWhite) {
+                if (StringUtil.isWhitespace(codePoint)) {
+                    if ((stripLeadingWhite && !reachedNonWhite) || lastWasWhite)
+                        continue;
+                    accum.append(' ');
+                    lastWasWhite = true;
+                    continue;
+                } else {
+                    lastWasWhite = false;
+                    reachedNonWhite = true;
+                }
+            }
+            // surrogate pairs, split implementation for efficiency on single char common case (saves creating strings, char[]):
+            if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
+                final char c = (char) codePoint;
+                // html specific and required escapes:
+                switch (c) {
+                    case '&':
+                        accum.append("&amp;");
+                        break;
+                    case 0xA0:
+                        if (escapeMode != EscapeMode.xhtml)
+                            accum.append("&nbsp;");
+                        else
+                            accum.append("&#xa0;");
+                        break;
+                    case '<':
+                        // escape when in character data or when in a xml attribute val or XML syntax; not needed in html attr val
+                        if (!inAttribute || escapeMode == EscapeMode.xhtml || out.syntax() == Syntax.xml)
+                            accum.append("&lt;");
+                        else
+                            accum.append(c);
+                        break;
+                    case '>':
+                        if (!inAttribute)
+                            accum.append("&gt;");
+                        else
+                            accum.append(c);
+                        break;
+                    case '"':
+                        if (inAttribute)
+                            accum.append("&quot;");
+                        else
+                            accum.append(c);
+                        break;
+                    default:
+                        if (canEncode(coreCharset, c, encoder))
+                            accum.append(c);
+                        else
+                            appendEncoded(accum, escapeMode, codePoint);
+                }
+            } else {
+                final String c = new String(Character.toChars(codePoint));
+                if (encoder.canEncode(c)) // uses fallback encoder for simplicity
+                    accum.append(c);
+                else
+                    appendEncoded(accum, escapeMode, codePoint);
+            }
+        }
+    }
+static void escape(Appendable accum, String string, OutputSettings out,
+                       boolean inAttribute, boolean normaliseWhite, boolean stripLeadingWhite, boolean trimTrailing) throws IOException {
+
+        boolean lastWasWhite = false;
+        boolean reachedNonWhite = false;
+        final EscapeMode escapeMode = out.escapeMode();
+        final CharsetEncoder encoder = out.encoder();
+        final CoreCharset coreCharset = out.coreCharset; // init in out.prepareEncoder()
+        final int length = string.length();
+
+        int codePoint;
+        boolean skipped = false;
+        for (int offset = 0; offset < length; offset += Character.charCount(codePoint)) {
+            codePoint = string.codePointAt(offset);
+
+            if (normaliseWhite) {
+                if (StringUtil.isWhitespace(codePoint)) {
+                    if (stripLeadingWhite && !reachedNonWhite) continue;
+                    if (lastWasWhite) continue;
+                    if (trimTrailing) {
+                        skipped = true;
+                        continue;
+                    }
+                    accum.append(' ');
+                    lastWasWhite = true;
+                    continue;
+                } else {
+                    lastWasWhite = false;
+                    reachedNonWhite = true;
+                    if (skipped) {
+                        accum.append(' '); // wasn't the end, so need to place a normalized space
+                        skipped = false;
+                    }
+                }
+            }
+            // surrogate pairs, split implementation for efficiency on single char common case (saves creating strings, char[]):
+            if (codePoint < Character.MIN_SUPPLEMENTARY_CODE_POINT) {
+                final char c = (char) codePoint;
+                // html specific and required escapes:
+                switch (c) {
+                    case '&':
+                        accum.append("&amp;");
+                        break;
+                    case 0xA0:
+                        if (escapeMode != EscapeMode.xhtml)
+                            accum.append("&nbsp;");
+                        else
+                            accum.append("&#xa0;");
+                        break;
+                    case '<':
+                        // escape when in character data or when in a xml attribute val or XML syntax; not needed in html attr val
+                        if (!inAttribute || escapeMode == EscapeMode.xhtml || out.syntax() == Syntax.xml)
+                            accum.append("&lt;");
+                        else
+                            accum.append(c);
+                        break;
+                    case '>':
+                        if (!inAttribute)
+                            accum.append("&gt;");
+                        else
+                            accum.append(c);
+                        break;
+                    case '"':
+                        if (inAttribute)
+                            accum.append("&quot;");
+                        else
+                            accum.append(c);
+                        break;
+                    // we escape ascii control <x20 (other than tab, line-feed, carriage return)  for XML compliance (required) and HTML ease of reading (not required) - https://www.w3.org/TR/xml/#charsets
+                    case 0x9:
+                    case 0xA:
+                    case 0xD:
+                        accum.append(c);
+                        break;
+                    default:
+                        if (c < 0x20 || !canEncode(coreCharset, c, encoder))
+                            appendEncoded(accum, escapeMode, codePoint);
+                        else
+                            accum.append(c);
+                }
+            } else {
+                final String c = new String(Character.toChars(codePoint));
+                if (encoder.canEncode(c)) // uses fallback encoder for simplicity
+                    accum.append(c);
+                else
+                    appendEncoded(accum, escapeMode, codePoint);
+            }
+        }
+    }
+====0
+static CoreCharset byName(final String name) {
+            if (name.equals("US-ASCII"))
+                return ascii;
+            if (name.startsWith("UTF-")) // covers UTF-8, UTF-16, et al
+                return utf;
+            return fallback;
+        }
+static CoreCharset byName(final String name) {
+            if (name.equals("US-ASCII"))
+                return ascii;
+            if (name.startsWith("UTF-")) // covers UTF-8, UTF-16, et al
+                return utf;
+            return fallback;
+        }

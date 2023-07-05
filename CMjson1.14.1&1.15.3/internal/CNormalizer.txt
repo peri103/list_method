@@ -1,0 +1,7 @@
+====0
+public static String normalize(final String input, boolean isStringLiteral) {
+        return isStringLiteral ? lowerCase(input) : normalize(input);
+    }
+public static String normalize(final String input, boolean isStringLiteral) {
+        return isStringLiteral ? lowerCase(input) : normalize(input);
+    }

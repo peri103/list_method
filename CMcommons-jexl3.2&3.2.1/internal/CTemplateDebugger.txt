@@ -1,0 +1,31 @@
+====0
+private void newJxltLine() {
+        final int length = builder.length();
+        for (int i = length - 1; i >= 0; --i) {
+            final char c = builder.charAt(i);
+            switch (c) {
+                case '\n':
+                case ';':
+                    return;
+                case '}':
+                    builder.append('\n');
+                    return;
+                default: // continue
+            }
+        }
+    }
+private void newJxltLine() {
+        final int length = builder.length();
+        for (int i = length - 1; i >= 0; --i) {
+            final char c = builder.charAt(i);
+            switch (c) {
+                case '\n':
+                case ';':
+                    return;
+                case '}':
+                    builder.append('\n');
+                    return;
+                default: // continue
+            }
+        }
+    }

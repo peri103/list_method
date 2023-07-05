@@ -1,0 +1,7 @@
+====0
+private static void register(Tag tag) {
+        tags.put(tag.tagName, tag);
+    }
+private static void register(Tag tag) {
+        tags.put(tag.tagName, tag);
+    }

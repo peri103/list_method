@@ -1,0 +1,8 @@
+====3
+FilterResult tail(Node node, int depth);
+default FilterResult tail(Node node, int depth) {
+        return FilterResult.CONTINUE;
+    }
+====0
+FilterResult head(Node node, int depth);
+FilterResult head(Node node, int depth);

@@ -1,0 +1,9 @@
+====0
+public Document parser(Parser parser) {
+        this.parser = parser;
+        return this;
+    }
+public Document parser(Parser parser) {
+        this.parser = parser;
+        return this;
+    }

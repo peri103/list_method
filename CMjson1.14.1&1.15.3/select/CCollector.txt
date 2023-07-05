@@ -1,0 +1,29 @@
+====3
+public static @Nullable Element findFirst(Evaluator eval, Element root) {
+        FirstFinder finder = new FirstFinder(root, eval);
+        NodeTraversor.filter(finder, root);
+        return finder.match;
+    }
+public static @Nullable Element findFirst(Evaluator eval, Element root) {
+        FirstFinder finder = new FirstFinder(eval);
+        return finder.find(root, root);
+    }
+====2
+@Override
+        public FilterResult tail(Node node, int depth) {
+            return CONTINUE;
+        }
+public FilterResult tail(Node node, int depth) {
+            return CONTINUE;
+        }
+====0
+public static Elements collect (Evaluator eval, Element root) {
+        Elements elements = new Elements();
+        NodeTraversor.traverse(new Accumulator(root, elements, eval), root);
+        return elements;
+    }
+public static Elements collect (Evaluator eval, Element root) {
+        Elements elements = new Elements();
+        NodeTraversor.traverse(new Accumulator(root, elements, eval), root);
+        return elements;
+    }

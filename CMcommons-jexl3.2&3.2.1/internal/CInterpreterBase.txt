@@ -1,0 +1,109 @@
+====0
+protected void setAttribute(final Object object, final Object attribute, final Object value, final JexlNode node) {
+        cancelCheck(node);
+        final JexlOperator operator = node != null && node.jjtGetParent() instanceof ASTArrayAccess
+                                      ? JexlOperator.ARRAY_SET : JexlOperator.PROPERTY_SET;
+        final Object result = operators.tryOverload(node, operator, object, attribute, value);
+        if (result != JexlEngine.TRY_FAILED) {
+            return;
+        }
+        Exception xcause = null;
+        try {
+            // attempt to reuse last executor cached in volatile JexlNode.value
+            if (node != null && cache) {
+                final Object cached = node.jjtGetValue();
+                if (cached instanceof JexlPropertySet) {
+                    final JexlPropertySet setter = (JexlPropertySet) cached;
+                    final Object eval = setter.tryInvoke(object, attribute, value);
+                    if (!setter.tryFailed(eval)) {
+                        return;
+                    }
+                }
+            }
+            final List<JexlUberspect.PropertyResolver> resolvers = uberspect.getResolvers(operator, object);
+            JexlPropertySet vs = uberspect.getPropertySet(resolvers, object, attribute, value);
+            // if we can't find an exact match, narrow the value argument and try again
+            if (vs == null) {
+                // replace all numbers with the smallest type that will fit
+                final Object[] narrow = {value};
+                if (arithmetic.narrowArguments(narrow)) {
+                    vs = uberspect.getPropertySet(resolvers, object, attribute, narrow[0]);
+                }
+            }
+            if (vs != null) {
+                // cache executor in volatile JexlNode.value
+                vs.invoke(object, value);
+                if (node != null && cache && vs.isCacheable()) {
+                    node.jjtSetValue(vs);
+                }
+                return;
+            }
+        } catch (final Exception xany) {
+            xcause = xany;
+        }
+        // lets fail
+        if (node == null) {
+            // direct call
+            final String error = "unable to set object property"
+                    + ", class: " + object.getClass().getName()
+                    + ", property: " + attribute
+                    + ", argument: " + value.getClass().getSimpleName();
+            throw new UnsupportedOperationException(error, xcause);
+        }
+        final String attrStr = attribute != null ? attribute.toString() : null;
+        unsolvableProperty(node, attrStr, true, xcause);
+    }
+protected void setAttribute(final Object object, final Object attribute, final Object value, final JexlNode node) {
+        cancelCheck(node);
+        final JexlOperator operator = node != null && node.jjtGetParent() instanceof ASTArrayAccess
+                                      ? JexlOperator.ARRAY_SET : JexlOperator.PROPERTY_SET;
+        final Object result = operators.tryOverload(node, operator, object, attribute, value);
+        if (result != JexlEngine.TRY_FAILED) {
+            return;
+        }
+        Exception xcause = null;
+        try {
+            // attempt to reuse last executor cached in volatile JexlNode.value
+            if (node != null && cache) {
+                final Object cached = node.jjtGetValue();
+                if (cached instanceof JexlPropertySet) {
+                    final JexlPropertySet setter = (JexlPropertySet) cached;
+                    final Object eval = setter.tryInvoke(object, attribute, value);
+                    if (!setter.tryFailed(eval)) {
+                        return;
+                    }
+                }
+            }
+            final List<JexlUberspect.PropertyResolver> resolvers = uberspect.getResolvers(operator, object);
+            JexlPropertySet vs = uberspect.getPropertySet(resolvers, object, attribute, value);
+            // if we can't find an exact match, narrow the value argument and try again
+            if (vs == null) {
+                // replace all numbers with the smallest type that will fit
+                final Object[] narrow = {value};
+                if (arithmetic.narrowArguments(narrow)) {
+                    vs = uberspect.getPropertySet(resolvers, object, attribute, narrow[0]);
+                }
+            }
+            if (vs != null) {
+                // cache executor in volatile JexlNode.value
+                vs.invoke(object, value);
+                if (node != null && cache && vs.isCacheable()) {
+                    node.jjtSetValue(vs);
+                }
+                return;
+            }
+        } catch (final Exception xany) {
+            xcause = xany;
+        }
+        // lets fail
+        if (node == null) {
+            // direct call
+            final String error = "unable to set object property"
+                    + ", class: " + object.getClass().getName()
+                    + ", property: " + attribute
+                    + ", argument: " + value.getClass().getSimpleName();
+            throw new UnsupportedOperationException(error, xcause);
+        }
+        final String attrStr = attribute != null ? attribute.toString() : null;
+        unsolvableProperty(node, attrStr, true, xcause);
+    }

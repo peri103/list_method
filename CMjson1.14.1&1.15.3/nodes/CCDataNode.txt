@@ -1,0 +1,8 @@
+====0
+@Override
+    public CDataNode clone() {
+        return (CDataNode) super.clone();
+    }
+public CDataNode clone() {
+        return (CDataNode) super.clone();
+    }

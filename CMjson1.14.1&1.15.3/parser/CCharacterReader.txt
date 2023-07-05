@@ -1,0 +1,147 @@
+====14
+boolean containsIgnoreCase(String seq) {
+        // used to check presence of </title>, </style>. only finds consistent case.
+        String loScan = seq.toLowerCase(Locale.ENGLISH);
+        String hiScan = seq.toUpperCase(Locale.ENGLISH);
+        return (nextIndexOf(loScan) > -1) || (nextIndexOf(hiScan) > -1);
+    }
+boolean containsIgnoreCase(String seq) {
+        if (seq.equals(lastIcSeq)) {
+            if (lastIcIndex == -1) return false;
+            if (lastIcIndex >= bufPos) return true;
+        }
+        lastIcSeq = seq;
+
+        String loScan = seq.toLowerCase(Locale.ENGLISH);
+        int lo = nextIndexOf(loScan);
+        if (lo > -1) {
+            lastIcIndex = bufPos + lo; return true;
+        }
+
+        String hiScan = seq.toUpperCase(Locale.ENGLISH);
+        int hi = nextIndexOf(hiScan);
+        boolean found = hi > -1;
+        lastIcIndex = found ? bufPos + hi : -1; // we don't care about finding the nearest, just that buf contains
+        return found;
+    }
+====5
+private static String cacheString(final char[] charBuf, final String[] stringCache, final int start, final int count) {
+        // limit (no cache):
+        if (count > maxStringCacheLen)
+            return new String(charBuf, start, count);
+        if (count < 1)
+            return "";
+
+        // calculate hash:
+        int hash = 31 * count;
+        int offset = start;
+        for (int i = 0; i < count; i++) {
+            hash = 31 * hash + charBuf[offset++];
+        }
+
+        // get from cache
+        final int index = hash & stringCacheSize - 1;
+        String cached = stringCache[index];
+
+        if (cached == null) { // miss, add
+            cached = new String(charBuf, start, count);
+            stringCache[index] = cached;
+        } else { // hashcode hit, check equality
+            if (rangeEquals(charBuf, start, count, cached)) { // hit
+                return cached;
+            } else { // hashcode conflict
+                cached = new String(charBuf, start, count);
+                stringCache[index] = cached; // update the cache, as recently used strings are more likely to show up again
+            }
+        }
+        return cached;
+    }
+private static String cacheString(final char[] charBuf, final String[] stringCache, final int start, final int count) {
+        // limit (no cache):
+        if (count > maxStringCacheLen)
+            return new String(charBuf, start, count);
+        if (count < 1)
+            return "";
+
+        // calculate hash:
+        int hash = 0;
+        for (int i = 0; i < count; i++) {
+            hash = 31 * hash + charBuf[start + i];
+        }
+
+        // get from cache
+        final int index = hash & stringCacheSize - 1;
+        String cached = stringCache[index];
+
+        if (cached != null && rangeEquals(charBuf, start, count, cached)) // positive hit
+            return cached;
+        else {
+            cached = new String(charBuf, start, count);
+            stringCache[index] = cached; // add or replace, assuming most recently used are most likely to recur next
+        }
+
+        return cached;
+    }
+====1
+String consumeTagName() {
+        // '\t', '\n', '\r', '\f', ' ', '/', '>', nullChar
+        // NOTE: out of spec, added '<' to fix common author bugs
+        bufferUp();
+        int pos = bufPos;
+        final int start = pos;
+        final int remaining = bufLength;
+        final char[] val = charBuf;
+
+        OUTER: while (pos < remaining) {
+            switch (val[pos]) {
+                case '\t':
+                case '\n':
+                case '\r':
+                case '\f':
+                case ' ':
+                case '/':
+                case '>':
+                case '<':
+                case TokeniserState.nullChar:
+                    break OUTER;
+            }
+            pos++;
+        }
+
+        bufPos = pos;
+        return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
+    }
+String consumeTagName() {
+        // '\t', '\n', '\r', '\f', ' ', '/', '>'
+        // NOTE: out of spec, added '<' to fix common author bugs; does not stop and append on nullChar but eats
+        bufferUp();
+        int pos = bufPos;
+        final int start = pos;
+        final int remaining = bufLength;
+        final char[] val = charBuf;
+
+        OUTER: while (pos < remaining) {
+            switch (val[pos]) {
+                case '\t':
+                case '\n':
+                case '\r':
+                case '\f':
+                case ' ':
+                case '/':
+                case '>':
+                case '<':
+                    break OUTER;
+            }
+            pos++;
+        }
+
+        bufPos = pos;
+        return pos > start ? cacheString(charBuf, stringCache, start, pos -start) : "";
+    }
+====0
+boolean rangeEquals(final int start, final int count, final String cached) {
+        return rangeEquals(charBuf, start, count, cached);
+    }
+boolean rangeEquals(final int start, final int count, final String cached) {
+        return rangeEquals(charBuf, start, count, cached);
+    }

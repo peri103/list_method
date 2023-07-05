@@ -1,0 +1,7 @@
+====0
+public static ParseErrorList tracking(int maxSize) {
+        return new ParseErrorList(INITIAL_CAPACITY, maxSize);
+    }
+public static ParseErrorList tracking(int maxSize) {
+        return new ParseErrorList(INITIAL_CAPACITY, maxSize);
+    }

@@ -1,0 +1,22 @@
+====0
+@Override
+		protected int calculatePosition(Element root, Element element) {
+			int pos = 0;
+            if (element.parent() == null)
+                return 0;
+        	Elements family = element.parent().children();
+        	for (int i = element.elementSiblingIndex(); i < family.size(); i++) {
+        		if (family.get(i).tag().equals(element.tag())) pos++;
+        	}
+			return pos;
+		}
+protected int calculatePosition(Element root, Element element) {
+			int pos = 0;
+            if (element.parent() == null)
+                return 0;
+        	Elements family = element.parent().children();
+        	for (int i = element.elementSiblingIndex(); i < family.size(); i++) {
+        		if (family.get(i).tag().equals(element.tag())) pos++;
+        	}
+			return pos;
+		}

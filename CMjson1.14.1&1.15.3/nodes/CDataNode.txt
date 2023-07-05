@@ -1,0 +1,8 @@
+====0
+@Override
+    public DataNode clone() {
+        return (DataNode) super.clone();
+    }
+public DataNode clone() {
+        return (DataNode) super.clone();
+    }

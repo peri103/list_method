@@ -1,0 +1,47 @@
+====3
+@Override
+    void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
+        if (out.syntax() == Syntax.html && !has(PUBLIC_ID) && !has(SYSTEM_ID)) {
+            // looks like a html5 doctype, go lowercase for aesthetics
+            accum.append("<!doctype");
+        } else {
+            accum.append("<!DOCTYPE");
+        }
+        if (has(NAME))
+            accum.append(" ").append(attr(NAME));
+        if (has(PUB_SYS_KEY))
+            accum.append(" ").append(attr(PUB_SYS_KEY));
+        if (has(PUBLIC_ID))
+            accum.append(" \"").append(attr(PUBLIC_ID)).append('"');
+        if (has(SYSTEM_ID))
+            accum.append(" \"").append(attr(SYSTEM_ID)).append('"');
+        accum.append('>');
+    }
+void outerHtmlHead(Appendable accum, int depth, Document.OutputSettings out) throws IOException {
+        // add a newline if the doctype has a preceding node (which must be a comment)
+        if (siblingIndex > 0 && out.prettyPrint())
+            accum.append('\n');
+
+        if (out.syntax() == Syntax.html && !has(PUBLIC_ID) && !has(SYSTEM_ID)) {
+            // looks like a html5 doctype, go lowercase for aesthetics
+            accum.append("<!doctype");
+        } else {
+            accum.append("<!DOCTYPE");
+        }
+        if (has(NAME))
+            accum.append(" ").append(attr(NAME));
+        if (has(PUB_SYS_KEY))
+            accum.append(" ").append(attr(PUB_SYS_KEY));
+        if (has(PUBLIC_ID))
+            accum.append(" \"").append(attr(PUBLIC_ID)).append('"');
+        if (has(SYSTEM_ID))
+            accum.append(" \"").append(attr(SYSTEM_ID)).append('"');
+        accum.append('>');
+    }
+====0
+private boolean has(final String attribute) {
+        return !StringUtil.isBlank(attr(attribute));
+    }
+private boolean has(final String attribute) {
+        return !StringUtil.isBlank(attr(attribute));
+    }

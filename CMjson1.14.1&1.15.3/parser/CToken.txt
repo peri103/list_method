@@ -1,0 +1,88 @@
+====15
+final void newAttribute() {
+            if (attributes == null)
+                attributes = new Attributes();
+
+            if (pendingAttributeName != null) {
+                // the tokeniser has skipped whitespace control chars, but trimming could collapse to empty for other control codes, so verify here
+                pendingAttributeName = pendingAttributeName.trim();
+                if (pendingAttributeName.length() > 0) {
+                    String value;
+                    if (hasPendingAttributeValue)
+                        value = pendingAttributeValue.length() > 0 ? pendingAttributeValue.toString() : pendingAttributeValueS;
+                    else if (hasEmptyAttributeValue)
+                        value = "";
+                    else
+                        value = null;
+                    // note that we add, not put. So that the first is kept, and rest are deduped, once in a context where case sensitivity is known (the appropriate tree builder).
+                    attributes.add(pendingAttributeName, value);
+                }
+            }
+            pendingAttributeName = null;
+            hasEmptyAttributeValue = false;
+            hasPendingAttributeValue = false;
+            reset(pendingAttributeValue);
+            pendingAttributeValueS = null;
+        }
+final void newAttribute() {
+            if (attributes == null)
+                attributes = new Attributes();
+
+            if (hasAttrName && attributes.size() < MaxAttributes) {
+                // the tokeniser has skipped whitespace control chars, but trimming could collapse to empty for other control codes, so verify here
+                String name = attrName.length() > 0 ? attrName.toString() : attrNameS;
+                name = name.trim();
+                if (name.length() > 0) {
+                    String value;
+                    if (hasAttrValue)
+                        value = attrValue.length() > 0 ? attrValue.toString() : attrValueS;
+                    else if (hasEmptyAttrValue)
+                        value = "";
+                    else
+                        value = null;
+                    // note that we add, not put. So that the first is kept, and rest are deduped, once in a context where case sensitivity is known (the appropriate tree builder).
+                    attributes.add(name, value);
+                }
+            }
+            reset(attrName);
+            attrNameS = null;
+            hasAttrName = false;
+
+            reset(attrValue);
+            attrValueS = null;
+            hasAttrValue = false;
+            hasEmptyAttrValue = false;
+        }
+====2
+final void appendAttributeValue(int[] appendCodepoints) {
+            ensureAttributeValue();
+            for (int codepoint : appendCodepoints) {
+                pendingAttributeValue.appendCodePoint(codepoint);
+            }
+        }
+final void appendAttributeValue(int[] appendCodepoints) {
+            ensureAttrValue();
+            for (int codepoint : appendCodepoints) {
+                attrValue.appendCodePoint(codepoint);
+            }
+        }
+====1
+StartTag nameAttr(String name, Attributes attributes) {
+            this.tagName = name;
+            this.attributes = attributes;
+            normalName = lowerCase(tagName);
+            return this;
+        }
+StartTag nameAttr(String name, Attributes attributes) {
+            this.tagName = name;
+            this.attributes = attributes;
+            normalName = ParseSettings.normalName(tagName);
+            return this;
+        }
+====0
+final boolean isEOF() {
+        return type == TokenType.EOF;
+    }
+final boolean isEOF() {
+        return type == TokenType.EOF;
+    }

@@ -1,0 +1,15 @@
+====0
+public static void filter(NodeFilter filter, Elements elements) {
+        Validate.notNull(filter);
+        Validate.notNull(elements);
+        for (Element el : elements)
+            if (filter(filter, el) == FilterResult.STOP)
+                break;
+    }
+public static void filter(NodeFilter filter, Elements elements) {
+        Validate.notNull(filter);
+        Validate.notNull(elements);
+        for (Element el : elements)
+            if (filter(filter, el) == FilterResult.STOP)
+                break;
+    }

@@ -1,0 +1,118 @@
+====6
+public static String padding(int width) {
+        if (width < 0)
+            throw new IllegalArgumentException("width must be > 0");
+
+        if (width < padding.length)
+            return padding[width];
+        width = Math.min(width, maxPaddingWidth);
+        char[] out = new char[width];
+        for (int i = 0; i < width; i++)
+            out[i] = ' ';
+        return String.valueOf(out);
+    }
+public static String padding(int width, int maxPaddingWidth) {
+        Validate.isTrue(width >= 0, "width must be >= 0");
+        Validate.isTrue(maxPaddingWidth >= -1);
+        if (maxPaddingWidth != -1)
+            width = Math.min(width, maxPaddingWidth);
+        if (width < padding.length)
+            return padding[width];        
+        char[] out = new char[width];
+        for (int i = 0; i < width; i++)
+            out[i] = ' ';
+        return String.valueOf(out);
+    }
+====4
+public static String resolve(final String baseUrl, final String relUrl) {
+        URL base;
+        try {
+            try {
+                base = new URL(baseUrl);
+            } catch (MalformedURLException e) {
+                // the base is unsuitable, but the attribute/rel may be abs on its own, so try that
+                URL abs = new URL(relUrl);
+                return abs.toExternalForm();
+            }
+            return resolve(base, relUrl).toExternalForm();
+        } catch (MalformedURLException e) {
+            return "";
+        }
+    }
+public static String resolve(String baseUrl, String relUrl) {
+        // workaround: java will allow control chars in a path URL and may treat as relative, but Chrome / Firefox will strip and may see as a scheme. Normalize to browser's view.
+        baseUrl = stripControlChars(baseUrl); relUrl = stripControlChars(relUrl);
+        try {
+            URL base;
+            try {
+                base = new URL(baseUrl);
+            } catch (MalformedURLException e) {
+                // the base is unsuitable, but the attribute/rel may be abs on its own, so try that
+                URL abs = new URL(relUrl);
+                return abs.toExternalForm();
+            }
+            return resolve(base, relUrl).toExternalForm();
+        } catch (MalformedURLException e) {
+            // it may still be valid, just that Java doesn't have a registered stream handler for it, e.g. tel
+            // we test here vs at start to normalize supported URLs (e.g. HTTP -> http)
+            return validUriScheme.matcher(relUrl).find() ? relUrl : "";
+        }
+    }
+====1
+public static boolean isBlank(String string) {
+        if (string == null || string.length() == 0)
+            return true;
+
+        int l = string.length();
+        for (int i = 0; i < l; i++) {
+            if (!StringUtil.isWhitespace(string.codePointAt(i)))
+                return false;
+        }
+        return true;
+    }
+public static boolean isBlank(final String string) {
+        if (string == null || string.length() == 0)
+            return true;
+
+        int l = string.length();
+        for (int i = 0; i < l; i++) {
+            if (!StringUtil.isWhitespace(string.codePointAt(i)))
+                return false;
+        }
+        return true;
+    }
+====0
+public static String releaseBuilder(StringBuilder sb) {
+        Validate.notNull(sb);
+        String string = sb.toString();
+
+        if (sb.length() > MaxCachedBuilderSize)
+            sb = new StringBuilder(MaxCachedBuilderSize); // make sure it hasn't grown too big
+        else
+            sb.delete(0, sb.length()); // make sure it's emptied on release
+
+        Stack<StringBuilder> builders = threadLocalBuilders.get();
+        builders.push(sb);
+
+        while (builders.size() > MaxIdleBuilders) {
+            builders.pop();
+        }
+        return string;
+    }
+public static String releaseBuilder(StringBuilder sb) {
+        Validate.notNull(sb);
+        String string = sb.toString();
+
+        if (sb.length() > MaxCachedBuilderSize)
+            sb = new StringBuilder(MaxCachedBuilderSize); // make sure it hasn't grown too big
+        else
+            sb.delete(0, sb.length()); // make sure it's emptied on release
+
+        Stack<StringBuilder> builders = threadLocalBuilders.get();
+        builders.push(sb);
+
+        while (builders.size() > MaxIdleBuilders) {
+            builders.pop();
+        }
+        return string;
+    }

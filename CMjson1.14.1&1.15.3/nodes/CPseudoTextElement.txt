@@ -1,0 +1,6 @@
+====0
+@Override
+    void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {
+    }
+void outerHtmlTail(Appendable accum, int depth, Document.OutputSettings out) {
+    }

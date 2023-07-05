@@ -1,0 +1,9 @@
+====0
+public static @Nullable Element selectFirst(String cssQuery, Element root) {
+        Validate.notEmpty(cssQuery);
+        return Collector.findFirst(QueryParser.parse(cssQuery), root);
+    }
+public static @Nullable Element selectFirst(String cssQuery, Element root) {
+        Validate.notEmpty(cssQuery);
+        return Collector.findFirst(QueryParser.parse(cssQuery), root);
+    }

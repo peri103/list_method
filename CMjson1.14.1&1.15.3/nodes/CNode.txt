@@ -1,0 +1,129 @@
+====7
+protected Node doClone(@Nullable Node parent) {
+        Node clone;
+
+        try {
+            clone = (Node) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
+
+        clone.parentNode = parent; // can be null, to create an orphan split
+        clone.siblingIndex = parent == null ? 0 : siblingIndex;
+
+        return clone;
+    }
+protected Node doClone(@Nullable Node parent) {
+        Node clone;
+
+        try {
+            clone = (Node) super.clone();
+        } catch (CloneNotSupportedException e) {
+            throw new RuntimeException(e);
+        }
+
+        clone.parentNode = parent; // can be null, to create an orphan split
+        clone.siblingIndex = parent == null ? 0 : siblingIndex;
+        // if not keeping the parent, shallowClone the ownerDocument to preserve its settings
+        if (parent == null && !(this instanceof Document)) {
+            Document doc = ownerDocument();
+            if (doc != null) {
+                Document docClone = doc.shallowClone();
+                clone.parentNode = docClone;
+                docClone.ensureChildNodes().add(clone);
+            }
+        }
+
+        return clone;
+    }
+====3
+private void reindexChildren(int start) {
+        final List<Node> childNodes = ensureChildNodes();
+
+        for (int i = start; i < childNodes.size(); i++) {
+            childNodes.get(i).setSiblingIndex(i);
+        }
+    }
+private void reindexChildren(int start) {
+        final int size = childNodeSize();
+        if (size == 0) return;
+        final List<Node> childNodes = ensureChildNodes();
+        for (int i = start; i < size; i++) {
+            childNodes.get(i).setSiblingIndex(i);
+        }
+    }
+====2
+@Override
+    public Node clone() {
+        Node thisClone = doClone(null); // splits for orphan
+
+        // Queue up nodes that need their children cloned (BFS).
+        final LinkedList<Node> nodesToProcess = new LinkedList<>();
+        nodesToProcess.add(thisClone);
+
+        while (!nodesToProcess.isEmpty()) {
+            Node currParent = nodesToProcess.remove();
+
+            final int size = currParent.childNodeSize();
+            for (int i = 0; i < size; i++) {
+                final List<Node> childNodes = currParent.ensureChildNodes();
+                Node childClone = childNodes.get(i).doClone(currParent);
+                childNodes.set(i, childClone);
+                nodesToProcess.add(childClone);
+            }
+        }
+
+        return thisClone;
+    }
+@SuppressWarnings("MethodDoesntCallSuperMethod") // because it does call super.clone in doClone - analysis just isn't following
+    
+    public Node clone() {
+        Node thisClone = doClone(null); // splits for orphan
+
+        // Queue up nodes that need their children cloned (BFS).
+        final LinkedList<Node> nodesToProcess = new LinkedList<>();
+        nodesToProcess.add(thisClone);
+
+        while (!nodesToProcess.isEmpty()) {
+            Node currParent = nodesToProcess.remove();
+
+            final int size = currParent.childNodeSize();
+            for (int i = 0; i < size; i++) {
+                final List<Node> childNodes = currParent.ensureChildNodes();
+                Node childClone = childNodes.get(i).doClone(currParent);
+                childNodes.set(i, childClone);
+                nodesToProcess.add(childClone);
+            }
+        }
+
+        return thisClone;
+    }
+====1
+@Override
+    public boolean equals(Object o) {
+        // implemented just so that javadoc is clear this is an identity test
+        return this == o;
+    }
+public boolean equals(@Nullable Object o) {
+        // implemented just so that javadoc is clear this is an identity test
+        return this == o;
+    }
+====0
+public void tail(Node node, int depth) {
+            if (!node.nodeName().equals("#text")) { // saves a void hit.
+				try {
+					node.outerHtmlTail(accum, depth, out);
+				} catch (IOException exception) {
+					throw new SerializationException(exception);
+				}
+            }
+        }
+public void tail(Node node, int depth) {
+            if (!node.nodeName().equals("#text")) { // saves a void hit.
+				try {
+					node.outerHtmlTail(accum, depth, out);
+				} catch (IOException exception) {
+					throw new SerializationException(exception);
+				}
+            }
+        }

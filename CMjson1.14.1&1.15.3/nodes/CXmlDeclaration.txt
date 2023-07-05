@@ -1,0 +1,33 @@
+====8
+private void getWholeDeclaration(Appendable accum, Document.OutputSettings out) throws IOException {
+        for (Attribute attribute : attributes()) {
+            if (!attribute.getKey().equals(nodeName())) { // skips coreValue (name)
+                accum.append(' ');
+                attribute.html(accum, out);
+            }
+        }
+    }
+private void getWholeDeclaration(Appendable accum, Document.OutputSettings out) throws IOException {
+        for (Attribute attribute : attributes()) {
+            String key = attribute.getKey();
+            String val = attribute.getValue();
+            if (!key.equals(nodeName())) { // skips coreValue (name)
+                accum.append(' ');
+                // basically like Attribute, but skip empty vals in XML
+                accum.append(key);
+                if (!val.isEmpty()) {
+                    accum.append("=\"");
+                    Entities.escape(accum, val, out, true, false, false, false);
+                    accum.append('"');
+                }
+            }
+        }
+    }
+====0
+@Override
+    public XmlDeclaration clone() {
+        return (XmlDeclaration) super.clone();
+    }
+public XmlDeclaration clone() {
+        return (XmlDeclaration) super.clone();
+    }
